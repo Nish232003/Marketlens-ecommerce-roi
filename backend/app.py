@@ -1,11 +1,19 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-import anthropic
+import os
+import sys
 import io
 import traceback
 import math
 import json
-import os
+
+# Ensure backend directory is always in sys.path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
 
 from analysis import load_olist_files, validate_files, run_full_analysis
 from charts import generate_all_charts
