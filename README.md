@@ -5,6 +5,10 @@
 MarketLens is an end-to-end marketing analytics platform that ingests raw e-commerce transactional CSVs, computes channel-level ROI metrics (ROAS, CAC, LTV/CAC), generates interactive visualizations, and provides AI-powered strategic recommendations  all from a single browser tab.
 
 <p align="left">
+  <a href="https://marketlens-ecommerce-roi.onrender.com/"><img src="https://img.shields.io/badge/Live_Demo-Render-c8ff00?style=for-the-badge&logo=render&logoColor=09090f" alt="Live Demo"></a>
+</p>
+
+<p align="left">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python" alt="Python"></a>
   <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-3.0-000000?logo=flask" alt="Flask"></a>
   <a href="https://plotly.com/python/"><img src="https://img.shields.io/badge/Plotly-5.22-3F4F75?logo=plotly" alt="Plotly"></a>
@@ -246,9 +250,13 @@ MarketLens requires 6 CSV files with the following columns:
 
 ## Deployment
 
-### Render.com (Recommended)
+### 🌐 Live Production URL
+The platform is live and publicly accessible:
+**[https://marketlens-ecommerce-roi.onrender.com/](https://marketlens-ecommerce-roi.onrender.com/)**
 
-1. Push your repository to GitHub.
+### Deploy Your Own on Render.com
+
+1. Fork or push this repository to GitHub.
 2. Create a new **Web Service** on [Render.com](https://render.com).
 3. Connect your GitHub repository.
 4. Configure:
@@ -256,7 +264,7 @@ MarketLens requires 6 CSV files with the following columns:
    - **Start Command**: `gunicorn backend.app:app`
 5. Deploy.
 
-The application includes a pre-configured `Procfile` and `render.yaml` for streamlined deployment.
+The application includes a pre-configured `Procfile` and `render.yaml` for 1-click automated deployment.
 
 ---
 
