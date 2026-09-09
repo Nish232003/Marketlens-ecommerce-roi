@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MarketLens — Marketing Intelligence Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23c8ff00'/><circle cx='16' cy='16' r='10' stroke='%230a0a0a' stroke-width='2' fill='none'/><circle cx='16' cy='16' r='5' stroke='%230a0a0a' stroke-width='2' fill='none'/><circle cx='16' cy='16' r='2' fill='%230a0a0a'/></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+:root{
+  --bg:#09090f;--bg2:#0d0d18;--border:#1a1a2e;--text:#fff;--text2:#aaaacc;--text3:#555;--text4:#444;
+}
+[data-theme="light"]{
+  --bg:#f5f5f7;--bg2:#ffffff;--border:#e0e0e0;--text:#1a1a2e;--text2:#444;--text3:#888;--text4:#aaa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);transition:background .2s,color .2s;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+
+/* TOPBAR */
+.topbar{background:rgba(9,9,15,0.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+[data-theme="light"] .topbar{background:rgba(245,245,247,0.85)}
+.logo{display:flex;align-items:center;gap:11px}
+.lm{width:36px;height:36px;border-radius:8px;background:#c8ff00;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 14px rgba(200,255,0,0.3)}
+.ln{font-size:17px;font-weight:900;color:var(--text);letter-spacing:2px}
+.ls{font-size:11px;color:var(--text4);letter-spacing:1px;margin-top:2px}
+.nav{display:flex;gap:4px}
+.ntab{font-size:13px;padding:7px 18px;border-radius:4px;cursor:pointer;color:var(--text3);border:1px solid transparent;font-weight:700;letter-spacing:.5px;transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.ntab:hover{color:var(--text2);transform:translateY(-1px)}
+.ntab.on{background:var(--border);color:#00f5ff;border-color:#00f5ff30;box-shadow:0 0 10px rgba(0,245,255,0.15)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.timestamp{font-size:11px;color:var(--text4);letter-spacing:.5px;font-weight:600}
+.back-btn{font-size:11px;color:var(--text3);cursor:pointer;letter-spacing:.5px;font-weight:700;padding:7px 14px;border:1px solid var(--border);border-radius:4px;text-decoration:none;transition:all .2s}
+.back-btn:hover{color:#00f5ff;border-color:#00f5ff40;transform:translateY(-1px)}
+.theme-toggle{font-size:15px;cursor:pointer;padding:5px 10px;border:1px solid var(--border);border-radius:4px;transition:all .2s;user-select:none;color:var(--text)}
+.theme-toggle:hover{border-color:#c8ff00;transform:translateY(-1px)}
+.ai-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);letter-spacing:.5px;font-weight:600;background:rgba(255,255,255,0.02)}
+.ai-dot{width:7px;height:7px;border-radius:50%;animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+
+.view{display:none;opacity:0;transition:opacity .3s ease}
+.view.on{display:block;opacity:1}
+
+/* HERO STATS */
+.hero-strip{background:var(--bg);padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:1px solid var(--border)}
+.hstat{padding:22px 26px;border-right:1px solid var(--border);position:relative;overflow:hidden;transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.hstat:hover{background:rgba(255,255,255,0.02)}
+.hstat:last-child{border-right:none}
+.hstat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.hstat:nth-child(1)::after{background:#00f5ff}
+.hstat:nth-child(2)::after{background:#c8ff00}
+.hstat:nth-child(3)::after{background:#bf5af2}
+.hstat:nth-child(4)::after{background:#ff9f0a}
+.hstat:nth-child(5)::after{background:#ff2d78}
+.hsl{font-size:11px;color:var(--text3);letter-spacing:1px;font-weight:700;margin-bottom:8px;text-transform:uppercase}
+.hsv{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+.hss{font-size:11px;color:var(--text4);margin-top:5px}
+
+/* CHART GRID */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:2px}
+.chart-full{margin-bottom:2px}
+.chart-box{background:var(--bg2);overflow:hidden;border:1px solid var(--border);transition:border-color .2s}
+.chart-box:hover{border-color:rgba(255,255,255,0.12)}
+.chart-sep{height:1px;background:linear-gradient(90deg,transparent,#1a1a2e 20%,#c8ff0030 50%,#1a1a2e 80%,transparent);margin:4px 0}
+.skeleton{background:linear-gradient(90deg,#0d0d18 25%,#1a1a2e 50%,#0d0d18 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;min-height:380px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.cpad{padding:0 4px 4px}
+
+/* CHANNELS TABLE */
+.table-section{padding:20px 28px}
+.section-head{font-size:12px;color:var(--text2);letter-spacing:1.5px;font-weight:800;text-transform:uppercase}
+.tbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.tbl th{font-size:11px;letter-spacing:1px;font-weight:800;color:var(--text3);padding:14px 16px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;text-transform:uppercase}
+.tbl td{font-size:13px;padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,0.03)}
+.tbl tr:last-child td{border-bottom:none}
+.pill{font-size:11px;padding:4px 10px;border-radius:3px;font-weight:800;letter-spacing:.5px}
+
+/* FILTER PRESETS */
+.filter-presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fp-chip{font-size:11px;font-weight:700;color:var(--text3);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;outline:none}
+.fp-chip:hover{color:var(--text);border-color:rgba(255,255,255,0.2);transform:translateY(-1px)}
+.fp-chip.active{color:#09090f;background:#c8ff00;border-color:#c8ff00;font-weight:800;box-shadow:0 0 10px rgba(200,255,0,0.3)}
+
+/* INSIGHTS */
+.insight-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;margin-bottom:2px}
+.icard{padding:24px 28px;border:1px solid var(--border);transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.icard:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.icard.dark{background:var(--bg)}
+.icard.neon{background:var(--bg);border-color:#c8ff0040}
+.icard.purple{background:var(--bg);border-color:#bf5af240}
+.il{font-size:11px;letter-spacing:1.5px;font-weight:800;margin-bottom:10px;text-transform:uppercase}
+.icard.dark .il{color:var(--text3)}
+.icard.neon .il{color:#7aaa00}
+.icard.purple .il{color:#9b44cc}
+.in{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+.icard.dark .in{color:var(--text)}
+.icard.neon .in{color:#c8ff00}
+.icard.purple .in{color:#bf5af2}
+.ib{font-size:12px;margin-top:8px;line-height:1.6;color:var(--text4)}
+
+/* CHAT */
+.chat-section{padding:20px 28px}
+.chat-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.ch-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.ch-left{display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;border-radius:6px;background:#c8ff00;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 10px rgba(200,255,0,0.3)}
+.chn{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.chst{font-size:11px;letter-spacing:.5px}
+.clear-btn{font-size:11px;color:var(--text4);cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:3px;font-weight:700;letter-spacing:.5px;transition:.2s}
+.clear-btn:hover{color:#00f5ff;border-color:#00f5ff40}
+.msgs{padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-height:220px;max-height:380px;overflow-y:auto}
+.msg{max-width:84%;padding:14px 18px;font-size:13px;line-height:1.7;border-radius:6px;white-space:pre-wrap}
+.msg.ai{align-self:flex-start;background:#111125;border:1px solid var(--border);color:var(--text2);border-bottom-left-radius:2px}
+.msg.user{align-self:flex-end;background:#c8ff00;color:#09090f;font-weight:600;border-bottom-right-radius:2px}
+.msg.error{background:#1a0508;border:1px solid #330010;color:#ff6680}
+.tdots{display:flex;gap:4px;align-items:center}
+.d{width:6px;height:6px;border-radius:50%;background:#333;animation:bo 1s infinite}
+.d:nth-child(2){animation-delay:.15s}.d:nth-child(3){animation-delay:.3s}
+@keyframes bo{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+.chps{display:flex;flex-wrap:wrap;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}
+.chip{font-size:11px;padding:7px 14px;border-radius:3px;border:1px solid var(--border);color:var(--text3);background:transparent;cursor:pointer;font-weight:700;letter-spacing:.5px;transition:all .15s}
+.chip:hover{border-color:#00f5ff;color:#00f5ff;transform:translateY(-1px)}
+.ir{display:flex;border-top:1px solid var(--border)}
+.ir input{flex:1;background:var(--bg);border:none;padding:15px 20px;font-size:13px;color:var(--text);outline:none;font-family:'Inter',sans-serif}
+.ir input::placeholder{color:var(--text3)}
+.ir button{background:#c8ff00;color:#09090f;border:none;padding:15px 26px;font-size:12px;cursor:pointer;font-weight:900;letter-spacing:1.5px;transition:all .2s}
+.ir button:hover{background:#b8ef00;box-shadow:0 0 14px rgba(200,255,0,0.3)}
+.ir button:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+
+/* ONBOARDING OVERLAY */
+.onboard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.onboard-overlay.hidden{display:none}
+.onboard-card{background:#0d0d18;border:1px solid #c8ff0040;border-radius:12px;padding:36px 40px;max-width:440px;width:90%;text-align:center;box-shadow:0 0 40px rgba(0,0,0,0.6)}
+.onboard-step{font-size:11px;color:#c8ff00;letter-spacing:2px;font-weight:800;margin-bottom:12px}
+.onboard-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:-0.5px}
+.onboard-desc{font-size:13px;color:#999;line-height:1.7;margin-bottom:24px}
+.onboard-dots{display:flex;justify-content:center;gap:8px;margin-bottom:24px}
+.ob-dot{width:9px;height:9px;border-radius:50%;background:#1a1a2e;cursor:pointer;transition:.2s}
+.ob-dot.on{background:#c8ff00;box-shadow:0 0 6px #c8ff00}
+.onboard-actions{display:flex;justify-content:space-between;align-items:center}
+.onboard-skip{font-size:12px;color:#666;cursor:pointer;font-weight:700;letter-spacing:.5px}
+.onboard-skip:hover{color:#fff}
+.onboard-next{background:#c8ff00;color:#09090f;border:none;padding:11px 26px;border-radius:4px;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:1px;font-family:'Inter',sans-serif;transition:all .2s}
+.onboard-next:hover{background:#b8ef00;transform:translateY(-1px);box-shadow:0 0 12px rgba(200,255,0,0.3)}
+
+/* SIMULATOR */
+.sim-section{padding:0 28px 20px}
+.sim-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;padding:22px}
+.sim-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:18px 22px;margin-bottom:20px}
+.sstat{display:flex;flex-direction:column;gap:5px}
+.ssl{font-size:11px;color:var(--text3);letter-spacing:1px;font-weight:700;text-transform:uppercase}
+.ssv{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.sss{font-size:11px;color:var(--text4)}
+.sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.sim-item{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.sim-item:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.15)}
+.sim-head{display:flex;justify-content:space-between;align-items:center}
+.sim-ch-name{font-size:13px;font-weight:800;color:var(--text)}
+.sim-ch-roas{font-size:11px;padding:3px 8px;border-radius:3px;font-weight:800}
+.sim-slider-row{display:flex;align-items:center;gap:12px}
+.sim-slider{flex:1;accent-color:#c8ff00;cursor:pointer}
+.sim-pct{font-size:12px;font-weight:800;color:#c8ff00;min-width:44px;text-align:right}
+.sim-metrics{display:flex;justify-content:space-between;font-size:11px;color:var(--text4)}
+.sim-metrics span strong{color:var(--text2)}
+.sim-actions{display:flex;gap:8px}
+.sim-btn{border:none;border-radius:4px;padding:7px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.sim-btn.reset{background:var(--border);color:var(--text2)}
+.sim-btn.reset:hover{background:#2a2a3e;color:#fff}
+.sim-btn.ai{background:#c8ff00;color:#09090f}
+.sim-btn.ai:hover{background:#b8ef00;transform:translateY(-1px);box-shadow:0 0 10px rgba(200,255,0,0.3)}
+
+/* EXECUTIVE AI BRIEFING */
+.exec-briefing{background:var(--bg2);border-bottom:1px solid var(--border);padding:18px 28px}
+.eb-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.eb-tag{font-size:11px;font-weight:800;color:#c8ff00;letter-spacing:1.5px;display:flex;align-items:center;gap:6px}
+.eb-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:#c8ff00;box-shadow:0 0 8px #c8ff00}
+.eb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.eb-item{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.eb-item:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.3);border-color:rgba(200,255,0,0.25)}
+.eb-label{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.eb-text{font-size:12px;color:var(--text2);line-height:1.6}
+.eb-text strong{color:var(--text)}
+
+/* TABLE SEARCH & SORT */
+.tbl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px}
+.tbl-search{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:8px 14px;font-size:12px;color:var(--text);outline:none;font-family:'Inter',sans-serif;min-width:220px;transition:all .2s}
+.tbl-search:focus{border-color:#00f5ff;box-shadow:0 0 10px rgba(0,245,255,0.2)}
+.sortable{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px}
+.sortable:hover{color:var(--text)}
+.tbl tbody tr{cursor:pointer;transition:background .15s}
+
+/* KEYBOARD SHORTCUTS HINT */
+.kbd-hint{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text4);letter-spacing:.5px;font-weight:600}
+.kbd-key{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:2px 5px;font-size:9px;color:var(--text3);font-family:monospace}
+
+/* CHANNEL DRILL-DOWN MODAL */
+.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.cm-overlay.hidden{display:none}
+.cm-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:28px 32px;max-width:540px;width:92%;max-height:90vh;overflow-y:auto;box-shadow:0 0 40px rgba(0,0,0,0.6)}
+.cm-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.cm-sub{font-size:10px;color:#c8ff00;letter-spacing:1.5px;font-weight:800;margin-bottom:4px}
+.cm-title{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-.5px}
+.cm-close{font-size:24px;color:var(--text4);cursor:pointer;line-height:1;transition:.2s}
+.cm-close:hover{color:#ff4444}
+.cm-badges{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.cm-sec{font-size:11px;color:var(--text3);letter-spacing:1.5px;font-weight:800;margin:16px 0 10px;text-transform:uppercase}
+.cm-funnel{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:14px}
+.cm-fstep{text-align:center}
+.cm-fval{font-size:18px;font-weight:900;color:var(--text)}
+.cm-flbl{font-size:11px;color:var(--text4);margin-top:2px}
+.cm-farrow{font-size:14px;color:var(--text4)}
+.cm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.cm-stat{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px}
+.cm-slbl{font-size:10px;color:var(--text4);text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.cm-sval{font-size:17px;font-weight:900;color:var(--text)}
+.cm-rec{background:var(--bg);border:1px solid #c8ff0040;border-radius:6px;padding:14px 16px;font-size:12px;color:var(--text2);line-height:1.6}
+.cm-rec strong{color:#c8ff00}
+.cm-rec{background:var(--bg);border:1px solid #c8ff0040;border-radius:6px;padding:14px 16px;font-size:12px;color:var(--text2);line-height:1.6}
+.cm-rec strong{color:#c8ff00}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero-strip{grid-template-columns:repeat(2,1fr)}
+  .chart-grid{grid-template-columns:1fr}
+  .insight-row{grid-template-columns:1fr}
+  .eb-grid{grid-template-columns:1fr}
+  .sim-strip{grid-template-columns:repeat(2,1fr)}
+  .topbar{flex-wrap:wrap;gap:10px;padding:10px 16px}
+  .nav{order:3;width:100%;justify-content:center}
+}
+@media(max-width:600px){
+  .hstat{padding:16px}
+  .hsv{font-size:22px}
+  .table-section{padding:12px;overflow-x:auto}
+  .sim-strip{grid-template-columns:1fr}
+  .sim-section{padding:0 12px 16px}
+  .cm-funnel{flex-direction:column;gap:10px}
+  .cm-farrow{transform:rotate(90deg)}
+}
+
+/* PRINT STYLES FOR PDF EXPORT */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .topbar, .theme-toggle, .ai-status, .back-btn, .ir, .chps, .clear-btn, .onboard-overlay, .sim-actions, .tbl-search, .cm-overlay { display: none !important; }
+  .view { display: block !important; opacity: 1 !important; page-break-after: always; }
+  .chart-box, .tbl, .icard, .sim-card, .sim-item, .hero-strip, .exec-briefing, .eb-item { background: #fff !important; border-color: #ddd !important; color: #000 !important; }
+  .tbl th, .tbl td { color: #000 !important; border-color: #ddd !important; }
+  .ln, .in, .hsv, .ssv, .sim-ch-name, .eb-text { color: #000 !important; }
+  .hstat { border-color: #ddd !important; }
+  .chart-grid { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="lm">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="6.5" stroke="#09090f" stroke-width="1"/>
+        <circle cx="9" cy="9" r="3.5" stroke="#09090f" stroke-width="1.2"/>
+        <circle cx="9" cy="9" r="1.5" fill="#09090f"/>
+        <line x1="10.8" y1="7.2" x2="14.5" y2="3.5" stroke="#3a6e00" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="15" cy="3" r="1.3" fill="#3a6e00"/>
+      </svg>
+    </div>
+    <div><div class="ln">MARKETLENS</div><div class="ls">Marketing Intelligence</div></div>
+  </div>
+  <div class="nav">
+    <div class="ntab on" onclick="sw('ov',this)">Overview <span class="kbd-key">1</span></div>
+    <div class="ntab" onclick="sw('ch',this)">Channels <span class="kbd-key">2</span></div>
+    <div class="ntab" onclick="sw('ai',this)">AI Analyst <span class="kbd-key">3</span></div>
+  </div>
+  <div class="topbar-right">
+    <div class="timestamp" id="analysedAt"></div>
+    <div class="back-btn" onclick="exportCSV()" title="Export analysis as CSV">↓ Export</div>
+    <div class="back-btn" onclick="exportPDF()" title="Print or Save Executive PDF Report">📄 PDF Report</div>
+    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</div>
+    <a class="back-btn" href="/">← New Analysis</a>
+    <div class="ai-status" id="aiStatus">
+      <div class="ai-dot" id="aiDot" style="background:#333"></div>
+      <span id="aiLabel" style="color:var(--text4)">Loading...</span>
+    </div>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<div id="ov" class="view on">
+  <div class="hero-strip" id="heroStrip">
+    <div class="hstat"><div class="hsl">Total Revenue</div><div class="hsv" style="color:#00f5ff" id="h-revenue">—</div><div class="hss" id="h-rev-sub">all channels</div></div>
+    <div class="hstat"><div class="hsl">Best ROAS</div><div class="hsv" style="color:#c8ff00" id="h-roas">—</div><div class="hss" id="h-best-ch">—</div></div>
+    <div class="hstat"><div class="hsl">Total Spend</div><div class="hsv" style="color:#bf5af2" id="h-spend">—</div><div class="hss">marketing budget</div></div>
+    <div class="hstat"><div class="hsl">Leads Converted</div><div class="hsv" style="color:#ff9f0a" id="h-conv">—</div><div class="hss" id="h-leads">from total leads</div></div>
+    <div class="hstat"><div class="hsl">Avg Customer LTV</div><div class="hsv" style="color:#ff2d78" id="h-ltv">—</div><div class="hss">lifetime value</div></div>
+  </div>
+
+  <!-- EXECUTIVE AI BRIEFING -->
+  <div class="exec-briefing" id="execBriefing"></div>
+
+  <div class="chart-grid" style="margin-top:2px">
+    <div class="chart-box"><div class="cpad"><div id="chart-roas" class="skeleton"></div></div></div>
+    <div class="chart-box"><div class="cpad"><div id="chart-cac" class="skeleton"></div></div></div>
+  </div>
+  <div class="chart-sep"></div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="cpad"><div id="chart-spend" class="skeleton"></div></div></div>
+    <div class="chart-box"><div class="cpad"><div id="chart-donut" class="skeleton"></div></div></div>
+  </div>
+</div>
+
+<!-- CHANNELS -->
+<div id="ch" class="view">
+  <div class="chart-grid" style="margin-top:2px">
+    <div class="chart-box"><div class="cpad"><div id="chart-ltv" class="skeleton"></div></div></div>
+    <div class="chart-box"><div class="cpad"><div id="chart-conv" class="skeleton"></div></div></div>
+  </div>
+  <div class="chart-sep"></div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="cpad"><div id="chart-budget" class="skeleton"></div></div></div>
+    <div class="chart-box"><div class="cpad"><div id="chart-cohort" class="skeleton"></div></div></div>
+  </div>
+  <div class="table-section">
+    <div class="tbl-top">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div class="section-head" style="margin-bottom:0">All Channel Metrics</div>
+        <div class="filter-presets" id="filterPresets">
+          <button class="fp-chip active" onclick="setTablePreset('all', this)">All Channels</button>
+          <button class="fp-chip" onclick="setTablePreset('scale', this)">🚀 Scale (ROAS ≥ 4x)</button>
+          <button class="fp-chip" onclick="setTablePreset('bleed', this)">⚠️ Bleeding (ROAS &lt; 1x)</button>
+          <button class="fp-chip" onclick="setTablePreset('ltv', this)">💎 High LTV/CAC (≥ 3x)</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input class="tbl-search" id="tblSearch" placeholder="🔍 Search channels... (/)" oninput="filterTable(this.value)"/>
+      </div>
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th onclick="sortTable('index')"><span class="sortable"># <span id="sort-index"></span></span></th>
+          <th onclick="sortTable('origin')"><span class="sortable">Channel <span id="sort-origin"></span></span></th>
+          <th onclick="sortTable('assumed_spend')"><span class="sortable">Spend <span id="sort-assumed_spend"></span></span></th>
+          <th onclick="sortTable('total_revenue')"><span class="sortable">Revenue <span id="sort-total_revenue"></span></span></th>
+          <th onclick="sortTable('CAC')"><span class="sortable">CAC <span id="sort-CAC"></span></span></th>
+          <th onclick="sortTable('ROAS')"><span class="sortable">ROAS <span id="sort-ROAS">▼</span></span></th>
+          <th onclick="sortTable('LTV_CAC')"><span class="sortable">LTV/CAC <span id="sort-LTV_CAC"></span></span></th>
+          <th onclick="sortTable('conversion_rate')"><span class="sortable">Conv % <span id="sort-conversion_rate"></span></span></th>
+          <th onclick="sortTable('total_leads')"><span class="sortable">Leads <span id="sort-total_leads"></span></span></th>
+          <th onclick="sortTable('converted_leads')"><span class="sortable">Converted <span id="sort-converted_leads"></span></span></th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="metricsTable"></tbody>
+    </table>
+  </div>
+  <div class="insight-row" id="insightRow" style="margin-top:2px"></div>
+
+  <!-- WHAT-IF BUDGET SIMULATOR -->
+  <div class="sim-section" style="margin-top:16px">
+    <div class="section-head" style="display:flex;justify-content:space-between;align-items:center">
+      <span>⚡ What-If Budget Simulator</span>
+      <div class="sim-actions">
+        <button class="sim-btn reset" onclick="resetSimulator()">↺ Reset</button>
+        <button class="sim-btn ai" onclick="sendSimToAI()">🤖 Ask AI to Evaluate</button>
+      </div>
+    </div>
+    <div class="sim-card">
+      <div class="sim-strip">
+        <div class="sstat">
+          <div class="ssl">Simulated Spend</div>
+          <div class="ssv" id="sim-spend">$0</div>
+          <div class="sss" id="sim-spend-delta">±0%</div>
+        </div>
+        <div class="sstat">
+          <div class="ssl">Projected Revenue</div>
+          <div class="ssv" style="color:#00f5ff" id="sim-rev">$0</div>
+          <div class="sss" id="sim-rev-delta">+0%</div>
+        </div>
+        <div class="sstat">
+          <div class="ssl">Projected Blended ROAS</div>
+          <div class="ssv" style="color:#c8ff00" id="sim-roas">0.00x</div>
+          <div class="sss" id="sim-roas-delta">vs 0.00x current</div>
+        </div>
+        <div class="sstat">
+          <div class="ssl">Est. Net Profit Impact</div>
+          <div class="ssv" style="color:#bf5af2" id="sim-profit">+$0</div>
+          <div class="sss">after ad spend</div>
+        </div>
+      </div>
+      <div class="sim-grid" id="simGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AI ANALYST -->
+<div id="ai" class="view">
+  <div class="chat-section">
+    <div class="chat-wrap">
+      <div class="ch-head">
+        <div class="ch-left">
+          <div class="av">
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="6.5" stroke="#09090f" stroke-width="1"/>
+              <circle cx="9" cy="9" r="3.5" stroke="#09090f" stroke-width="1.2"/>
+              <circle cx="9" cy="9" r="1.5" fill="#09090f"/>
+            </svg>
+          </div>
+          <div>
+            <div class="chn">MARKETLENS AI</div>
+            <div class="chst" id="chatSt" style="color:#555">loading...</div>
+          </div>
+        </div>
+        <div class="clear-btn" onclick="clearChat()">CLEAR</div>
+      </div>
+      <div class="msgs" id="msgs">
+        <div class="msg ai" id="welcomeMsg">Loading your analysis results...</div>
+      </div>
+      <div class="chps">
+        <div class="chip" onclick="ask('Which channel has the best ROI and why?')">BEST ROI?</div>
+        <div class="chip" onclick="ask('Where should I cut budget immediately?')">CUT BUDGET?</div>
+        <div class="chip" onclick="ask('Give me a full budget reallocation plan')">BUDGET PLAN</div>
+        <div class="chip" onclick="ask('Compare paid search vs organic search')">PAID VS ORGANIC</div>
+        <div class="chip" onclick="ask('What should we focus on next quarter?')">NEXT QUARTER</div>
+        <div class="chip" onclick="ask('Which channels are losing money?')">LOSING CHANNELS?</div>
+      </div>
+      <div class="ir">
+        <input id="inp" placeholder="Ask about your marketing data..." onkeydown="if(event.key==='Enter')send()"/>
+        <button id="sendbtn" onclick="send()">ASK →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING OVERLAY -->
+<div class="onboard-overlay" id="onboard">
+  <div class="onboard-card">
+    <div class="onboard-step" id="ob-step"></div>
+    <div class="onboard-title" id="ob-title"></div>
+    <div class="onboard-desc" id="ob-desc"></div>
+    <div class="onboard-dots">
+      <span class="ob-dot on" data-s="0"></span>
+      <span class="ob-dot" data-s="1"></span>
+      <span class="ob-dot" data-s="2"></span>
+    </div>
+    <div class="onboard-actions">
+      <span class="onboard-skip" onclick="closeOnboard()">Skip</span>
+      <button class="onboard-next" id="ob-next" onclick="nextOnboard()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANNEL DRILL-DOWN MODAL -->
+<div class="cm-overlay hidden" id="channelModal" onclick="if(event.target===this)closeChannelModal()">
+  <div class="cm-card">
+    <div class="cm-head">
+      <div>
+        <div class="cm-sub">CHANNEL DEEP DIVE</div>
+        <div class="cm-title" id="cm-title">Channel Name</div>
+      </div>
+      <div class="cm-close" onclick="closeChannelModal()">×</div>
+    </div>
+    <div class="cm-badges" id="cm-badges"></div>
+    <div class="cm-sec">Acquisition & Conversion Funnel</div>
+    <div class="cm-funnel" id="cm-funnel"></div>
+    <div class="cm-sec">Unit Economics & Efficiency</div>
+    <div class="cm-grid" id="cm-grid"></div>
+    <div class="cm-sec">Strategic Recommendation</div>
+    <div class="cm-rec" id="cm-rec"></div>
+  </div>
+</div>
+
+<script>
+let STATE = {};
+let hist = [];
+
+const NEON = ['#00f5ff','#c8ff00','#bf5af2','#ff2d78','#ff9f0a','#0a84ff','#30d158','#ffd60a','#5ac8fa','#ff453a'];
+
+// Restore theme
+(function(){
+  const saved = localStorage.getItem('ml-theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    const btn = document.querySelector('.theme-toggle');
+    if (btn && saved === 'light') btn.textContent = '🌙';
+  }
+})();
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) btn.textContent = next === 'light' ? '🌙' : '☀';
+  localStorage.setItem('ml-theme', next);
+}
+
+window.addEventListener('load', () => {
+  const raw = sessionStorage.getItem('marketlens');
+  if (!raw) {
+    document.getElementById('welcomeMsg').textContent = 'No data found. Please go back and upload your files.';
+    return;
+  }
+  STATE = JSON.parse(raw);
+  renderAll();
+});
+
+function fmt(n, prefix='$', suffix='') {
+  if (n == null) return '—';
+  if (n >= 1000000) return `${prefix}${(n/1000000).toFixed(1)}M${suffix}`;
+  if (n >= 1000)    return `${prefix}${(n/1000).toFixed(0)}K${suffix}`;
+  return `${prefix}${n.toFixed(0)}${suffix}`;
+}
+
+function animateValue(el, end, prefix='', suffix='', duration=1200) {
+  if (!el || end == null) return;
+  const start = 0;
+  const startTime = performance.now();
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = start + (end - start) * eased;
+    if (end >= 1000000) el.textContent = `${prefix}${(current/1000000).toFixed(1)}M${suffix}`;
+    else if (end >= 1000) el.textContent = `${prefix}${(current/1000).toFixed(0)}K${suffix}`;
+    else el.textContent = `${prefix}${current.toFixed(0)}${suffix}`;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function plotChart(id, chartData) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('skeleton');
+  if (chartData?.data) {
+    Plotly.newPlot(id, chartData.data, chartData.layout, { responsive: true, displayModeBar: false });
+  }
+}
+
+function renderAll() {
+  const { results, api_key } = STATE;
+  const { overview, metrics, budget, charts } = results;
+
+  animateValue(document.getElementById('h-revenue'), overview.total_revenue, '$');
+  animateValue(document.getElementById('h-roas'), overview.best_roas||0, '', 'x');
+  document.getElementById('h-best-ch').textContent = overview.best_channel || '—';
+  animateValue(document.getElementById('h-spend'), overview.total_spend, '$');
+  animateValue(document.getElementById('h-conv'), overview.total_converted||0);
+  document.getElementById('h-leads').textContent = `from ${overview.total_leads || 0} leads`;
+  animateValue(document.getElementById('h-ltv'), overview.avg_ltv, '$');
+
+  plotChart('chart-roas',   charts.roas);
+  plotChart('chart-cac',    charts.cac);
+  plotChart('chart-spend',  charts.spend_revenue);
+  plotChart('chart-donut',  charts.roas_donut);
+  plotChart('chart-ltv',    charts.ltv_cac);
+  plotChart('chart-conv',   charts.conversion);
+  plotChart('chart-budget', charts.budget);
+  plotChart('chart-cohort', charts.cohort);
+
+  renderExecutiveBriefing(overview, metrics);
+  renderTable(metrics);
+  renderInsights(overview, metrics);
+  initSimulator(metrics);
+  setupChat(api_key, overview, metrics);
+
+  const ts = document.getElementById('analysedAt');
+  if (ts) {
+    ts.textContent = 'Analysed ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+
+  showOnboard();
+}
+
+function exportPDF() {
+  window.print();
+}
+
+function exportCSV() {
+  const { results } = STATE;
+  if (!results?.metrics) return;
+  const headers = ['Channel','Spend','Revenue','CAC','ROAS','LTV/CAC','Conv %','Leads','Converted'];
+  const rows = results.metrics.filter(m => m.origin !== 'unknown').map(m => [
+    `"${m.origin}"`, m.assumed_spend||0, m.total_revenue||0, m.CAC||'',
+    m.ROAS||'', m.LTV_CAC||'', m.conversion_rate||0, m.total_leads||0, m.converted_leads||0
+  ]);
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'marketlens_analysis.csv';
+  a.click();
+}
+
+// What-If Budget Simulator Logic
+let simChannels = [];
+let simFactors = {};
+
+function initSimulator(metrics) {
+  const valid = (metrics || []).filter(m => m.origin !== 'unknown' && (m.assumed_spend || 0) > 0);
+  simChannels = valid;
+  simFactors = {};
+  valid.forEach(m => {
+    simFactors[m.origin] = 100;
+  });
+  renderSimUI();
+}
+
+function renderSimUI() {
+  const container = document.getElementById('simGrid');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  simChannels.forEach(m => {
+    const origSpend = m.assumed_spend || 0;
+    const origRev = m.total_revenue || 0;
+    const roas = m.ROAS || (origSpend > 0 ? origRev / origSpend : 0);
+    const [label, bg, fg] = getAction(roas);
+    const pct = simFactors[m.origin] || 100;
+    const currentSpend = origSpend * (pct / 100);
+    const mult = pct / 100;
+    const currentRev = mult <= 1 ? origRev * mult : origRev * Math.pow(mult, 0.82);
+
+    const div = document.createElement('div');
+    div.className = 'sim-item';
+    div.innerHTML = `
+      <div class="sim-head">
+        <span class="sim-ch-name">${m.origin}</span>
+        <span class="sim-ch-roas" style="background:${bg};color:${fg}">${label} (${roas.toFixed(1)}x)</span>
+      </div>
+      <div class="sim-slider-row">
+        <input type="range" class="sim-slider" min="0" max="250" step="5" value="${pct}" oninput="onSimSlider('${m.origin}', this.value)"/>
+        <span class="sim-pct" id="sim-pct-${m.origin}">${pct}%</span>
+      </div>
+      <div class="sim-metrics">
+        <span>Spend: <strong id="sim-sp-${m.origin}">${fmt(currentSpend)}</strong></span>
+        <span>Rev: <strong id="sim-rv-${m.origin}">${fmt(currentRev)}</strong></span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  
+  recalcSimulatorKPIs();
+}
+
+function onSimSlider(origin, val) {
+  simFactors[origin] = Number(val);
+  const pctEl = document.getElementById(`sim-pct-${origin}`);
+  if (pctEl) pctEl.textContent = `${val}%`;
+  
+  const ch = simChannels.find(c => c.origin === origin);
+  if (ch) {
+    const origSpend = ch.assumed_spend || 0;
+    const origRev = ch.total_revenue || 0;
+    const mult = Number(val) / 100;
+    const s = origSpend * mult;
+    const r = mult <= 1 ? origRev * mult : origRev * Math.pow(mult, 0.82);
+    
+    const spEl = document.getElementById(`sim-sp-${origin}`);
+    const rvEl = document.getElementById(`sim-rv-${origin}`);
+    if (spEl) spEl.textContent = fmt(s);
+    if (rvEl) rvEl.textContent = fmt(r);
+  }
+  
+  recalcSimulatorKPIs();
+}
+
+function recalcSimulatorKPIs() {
+  let baseSpendTotal = 0;
+  let baseRevTotal = 0;
+  let simSpendTotal = 0;
+  let simRevTotal = 0;
+  
+  simChannels.forEach(m => {
+    const origSpend = m.assumed_spend || 0;
+    const origRev = m.total_revenue || 0;
+    const mult = (simFactors[m.origin] || 100) / 100;
+    
+    baseSpendTotal += origSpend;
+    baseRevTotal += origRev;
+    
+    simSpendTotal += origSpend * mult;
+    simRevTotal += mult <= 1 ? origRev * mult : origRev * Math.pow(mult, 0.82);
+  });
+  
+  const spendDeltaPct = baseSpendTotal > 0 ? ((simSpendTotal - baseSpendTotal) / baseSpendTotal * 100) : 0;
+  const revDeltaPct = baseRevTotal > 0 ? ((simRevTotal - baseRevTotal) / baseRevTotal * 100) : 0;
+  const simROAS = simSpendTotal > 0 ? (simRevTotal / simSpendTotal) : 0;
+  const baseROAS = baseSpendTotal > 0 ? (baseRevTotal / baseSpendTotal) : 0;
+  const netProfitImpact = (simRevTotal - simSpendTotal) - (baseRevTotal - baseSpendTotal);
+  
+  const spEl = document.getElementById('sim-spend');
+  const spdEl = document.getElementById('sim-spend-delta');
+  const rvEl = document.getElementById('sim-rev');
+  const rvdEl = document.getElementById('sim-rev-delta');
+  const roasEl = document.getElementById('sim-roas');
+  const roasdEl = document.getElementById('sim-roas-delta');
+  const prEl = document.getElementById('sim-profit');
+  
+  if (spEl) spEl.textContent = fmt(simSpendTotal);
+  if (spdEl) spdEl.textContent = `${spendDeltaPct >= 0 ? '+' : ''}${spendDeltaPct.toFixed(1)}% vs base`;
+  if (rvEl) rvEl.textContent = fmt(simRevTotal);
+  if (rvdEl) rvdEl.textContent = `${revDeltaPct >= 0 ? '+' : ''}${revDeltaPct.toFixed(1)}% (${revDeltaPct >= 0 ? '+' : ''}${fmt(simRevTotal - baseRevTotal)})`;
+  if (roasEl) roasEl.textContent = `${simROAS.toFixed(2)}x`;
+  if (roasdEl) roasdEl.textContent = `vs ${baseROAS.toFixed(2)}x baseline`;
+  if (prEl) prEl.textContent = `${netProfitImpact >= 0 ? '+' : ''}${fmt(netProfitImpact)}`;
+}
+
+function resetSimulator() {
+  simChannels.forEach(m => {
+    simFactors[m.origin] = 100;
+  });
+  renderSimUI();
+}
+
+function sendSimToAI() {
+  const changes = [];
+  simChannels.forEach(m => {
+    const pct = simFactors[m.origin] || 100;
+    if (pct !== 100) {
+      changes.push(`${m.origin}: ${pct >= 100 ? '+' : ''}${pct - 100}% budget`);
+    }
+  });
+  const prompt = changes.length > 0
+    ? `I ran a budget simulation with the following changes: ${changes.join(', ')}. Evaluate the potential revenue impact, risks of diminishing returns, and advise whether this is an optimal reallocation strategy.`
+    : `Evaluate my current channel budget allocation and suggest a realistic what-if reallocation scenario to increase total blended ROAS.`;
+  ask(prompt);
+}
+
+function renderExecutiveBriefing(overview, metrics) {
+  const eb = document.getElementById('execBriefing');
+  if (!eb) return;
+  const valid = (metrics || []).filter(m => m.origin !== 'unknown' && (m.assumed_spend || 0) > 0);
+  if (!valid.length) {
+    eb.style.display = 'none';
+    return;
+  }
+  
+  const topGrowth = valid.reduce((a, b) => ((a.ROAS || 0) > (b.ROAS || 0) ? a : b), valid[0]);
+  const bleeds = valid.filter(m => (m.ROAS || 0) < 1.0);
+  const wasted = bleeds.reduce((s, m) => s + (m.assumed_spend || 0), 0);
+  const worstChannel = valid.reduce((a, b) => ((a.ROAS || 999) < (b.ROAS || 999) ? a : b), valid[0]);
+  
+  const reallocAmount = wasted > 0 ? wasted : Math.round((overview.total_spend || 0) * 0.15);
+  const projExtraRev = Math.round(reallocAmount * ((topGrowth.ROAS || 3) - 1));
+  
+  eb.innerHTML = `
+    <div class="eb-top">
+      <div class="eb-tag">EXECUTIVE AI BRIEFING · KEY SIGNALS</div>
+      <div style="font-size:11px;color:var(--text4)">Live diagnostic synthesis from ${valid.length} channel pipelines</div>
+    </div>
+    <div class="eb-grid">
+      <div class="eb-item">
+        <div class="eb-label" style="color:#c8ff00">🚀 Primary Growth Vector</div>
+        <div class="eb-text">
+          <strong>${topGrowth.origin}</strong> is your highest efficiency engine with <strong>${(topGrowth.ROAS || 0).toFixed(2)}x ROAS</strong> and <strong>$${(topGrowth.CAC || 0).toFixed(0)} CAC</strong>. Generated <strong>${fmt(topGrowth.total_revenue || 0)}</strong> from <strong>${fmt(topGrowth.assumed_spend || 0)}</strong> spend.
+        </div>
+      </div>
+      <div class="eb-item">
+        <div class="eb-label" style="color:#ff453a">⚠️ Budget Bleed Alert</div>
+        <div class="eb-text">
+          ${bleeds.length > 0
+            ? `<strong>${bleeds.map(b => b.origin).join(', ')}</strong> ${bleeds.length > 1 ? 'are' : 'is'} returning under 1.0x ROAS. <strong>${fmt(wasted)}</strong> of ad spend is unprofitable and burning margin.`
+            : `Lowest performer is <strong>${worstChannel.origin}</strong> (${(worstChannel.ROAS||0).toFixed(2)}x ROAS). Keep watchful tabs on acquisition costs.`
+          }
+        </div>
+      </div>
+      <div class="eb-item">
+        <div class="eb-label" style="color:#00f5ff">💡 High-Impact Next Action</div>
+        <div class="eb-text">
+          Reallocate <strong>${fmt(reallocAmount)}</strong> from bottom-quartile spend into <strong>${topGrowth.origin}</strong>. Estimated net return: <strong>+${fmt(projExtraRev)}</strong> in incremental revenue.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function rColor(roas) {
+  if (!roas) return '#ff453a';
+  if (roas >= 10) return '#00f5ff';
+  if (roas >= 4)  return '#c8ff00';
+  if (roas >= 2)  return '#ff9f0a';
+  if (roas >= 1)  return '#ffd60a';
+  return '#ff453a';
+}
+
+function getAction(roas) {
+  if (!roas)      return ['CUT',     '#ff453a', '#fff'];
+  if (roas >= 10) return ['SCALE',   '#c8ff00', '#09090f'];
+  if (roas >= 4)  return ['HOLD',    '#1a1a2e', '#00f5ff'];
+  if (roas >= 2)  return ['WATCH',   '#ff9f0a', '#09090f'];
+  if (roas >= 1)  return ['TRIM',    '#ffd60a', '#09090f'];
+  return           ['CUT',           '#ff453a', '#fff'];
+}
+
+let currentSort = { col: 'ROAS', asc: false };
+let currentFilter = '';
+let currentPreset = 'all';
+
+function setTablePreset(preset, el) {
+  currentPreset = preset;
+  document.querySelectorAll('.fp-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const { results } = STATE;
+  if (results?.metrics) renderTable(results.metrics);
+}
+
+function filterTable(q) {
+  currentFilter = (q || '').trim().toLowerCase();
+  const { results } = STATE;
+  if (results?.metrics) renderTable(results.metrics);
+}
+
+function sortTable(col) {
+  if (currentSort.col === col) {
+    currentSort.asc = !currentSort.asc;
+  } else {
+    currentSort.col = col;
+    currentSort.asc = (col === 'origin' || col === 'index');
+  }
+  const { results } = STATE;
+  if (results?.metrics) renderTable(results.metrics);
+}
+
+function updateSortIndicators() {
+  const cols = ['index', 'origin', 'assumed_spend', 'total_revenue', 'CAC', 'ROAS', 'LTV_CAC', 'conversion_rate', 'total_leads', 'converted_leads'];
+  cols.forEach(c => {
+    const el = document.getElementById(`sort-${c}`);
+    if (el) {
+      if (currentSort.col === c) {
+        el.textContent = currentSort.asc ? '▲' : '▼';
+        el.style.color = '#c8ff00';
+      } else {
+        el.textContent = '';
+      }
+    }
+  });
+}
+
+function renderTable(metrics) {
+  const tb = document.getElementById('metricsTable');
+  if (!tb) return;
+  tb.innerHTML = '';
+  
+  let list = (metrics || []).filter(m => m.origin !== 'unknown');
+  
+  // Preset filter
+  if (currentPreset === 'scale') {
+    list = list.filter(m => (m.ROAS || 0) >= 4.0);
+  } else if (currentPreset === 'bleed') {
+    list = list.filter(m => (m.ROAS || 0) < 1.0);
+  } else if (currentPreset === 'ltv') {
+    list = list.filter(m => (m.LTV_CAC || 0) >= 3.0);
+  }
+
+  // Keyword filter
+  if (currentFilter) {
+    list = list.filter(m => m.origin.toLowerCase().includes(currentFilter));
+  }
+  
+  list.sort((a, b) => {
+    let vA = a[currentSort.col];
+    let vB = b[currentSort.col];
+    if (currentSort.col === 'index') {
+      vA = metrics.indexOf(a);
+      vB = metrics.indexOf(b);
+    }
+    if (vA == null) vA = currentSort.asc ? Infinity : -Infinity;
+    if (vB == null) vB = currentSort.asc ? Infinity : -Infinity;
+    if (typeof vA === 'string') {
+      return currentSort.asc ? vA.localeCompare(vB) : vB.localeCompare(vA);
+    }
+    return currentSort.asc ? vA - vB : vB - vA;
+  });
+  
+  updateSortIndicators();
+  
+  if (list.length === 0) {
+    tb.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3)">No channels matching current filter (${currentPreset !== 'all' ? currentPreset : ''} ${currentFilter})</td></tr>`;
+    return;
+  }
+  
+  list.forEach((m) => {
+    const origIdx = metrics.indexOf(m) + 1;
+    const [label, bg, fg] = getAction(m.ROAS);
+    const c = rColor(m.ROAS);
+    const lc = !m.LTV_CAC ? '#ff453a' : m.LTV_CAC >= 3 ? '#00f5ff' : m.LTV_CAC >= 1 ? '#ff9f0a' : '#ff453a';
+    const cc = !m.CAC ? '#aaa' : m.CAC < 100 ? '#00f5ff' : m.CAC < 200 ? '#c8ff00' : m.CAC < 500 ? '#ff9f0a' : '#ff453a';
+    tb.innerHTML += `
+      <tr onclick="openChannelModal('${m.origin.replace(/'/g, "\\'")}')" title="Click to view deep-dive funnel & strategy">
+        <td style="color:var(--text3);font-weight:800;font-size:10px">${String(origIdx).padStart(2,'0')}</td>
+        <td style="font-weight:800;color:var(--text);font-size:13px">
+          <span style="display:inline-flex;align-items:center;gap:6px">
+            ${m.origin}
+            <span style="font-size:10px;color:#00f5ff;opacity:0.8">↗</span>
+          </span>
+        </td>
+        <td style="color:#bf5af2;font-weight:600">${fmt(m.assumed_spend||0)}</td>
+        <td style="color:${c};font-weight:700;font-size:13px">${fmt(m.total_revenue||0)}</td>
+        <td style="color:${cc};font-weight:600;font-size:13px">${m.CAC ? '$'+Number(m.CAC).toFixed(0) : '—'}</td>
+        <td style="font-weight:900;color:${c};font-size:14px">${m.ROAS ? m.ROAS.toFixed(2)+'x' : '—'}</td>
+        <td style="color:${lc};font-weight:700;font-size:13px">${m.LTV_CAC ? m.LTV_CAC.toFixed(2)+'x' : '—'}</td>
+        <td style="color:var(--text2)">${(m.conversion_rate||0).toFixed(1)}%</td>
+        <td style="color:var(--text3)">${(m.total_leads||0).toLocaleString()}</td>
+        <td style="color:var(--text3)">${(m.converted_leads||0).toLocaleString()}</td>
+        <td><span class="pill" style="background:${bg};color:${fg}">${label}</span></td>
+      </tr>
+    `;
+  });
+}
+
+function openChannelModal(origin) {
+  const { results } = STATE;
+  if (!results?.metrics) return;
+  const m = results.metrics.find(c => c.origin === origin);
+  if (!m) return;
+  
+  const [label, bg, fg] = getAction(m.ROAS);
+  const roas = m.ROAS || 0;
+  const spend = m.assumed_spend || 0;
+  const rev = m.total_revenue || 0;
+  const leads = m.total_leads || 0;
+  const conv = m.converted_leads || 0;
+  const cac = m.CAC || 0;
+  const ltvCac = m.LTV_CAC || 0;
+  const aov = conv > 0 ? (rev / conv) : 0;
+  const convRate = m.conversion_rate || 0;
+  
+  document.getElementById('cm-title').textContent = m.origin;
+  document.getElementById('cm-badges').innerHTML = `
+    <span class="pill" style="background:${bg};color:${fg};font-size:12px">${label} · ${roas.toFixed(2)}x ROAS</span>
+    <span class="pill" style="background:var(--border);color:var(--text2);font-size:12px">Conv Rate: ${convRate.toFixed(1)}%</span>
+    <span class="pill" style="background:var(--border);color:#00f5ff;font-size:12px">LTV/CAC: ${ltvCac > 0 ? ltvCac.toFixed(2)+'x' : 'N/A'}</span>
+  `;
+  
+  document.getElementById('cm-funnel').innerHTML = `
+    <div class="cm-fstep">
+      <div class="cm-fval" style="color:#00f5ff">${leads.toLocaleString()}</div>
+      <div class="cm-flbl">Total Leads (MQL)</div>
+    </div>
+    <div class="cm-farrow">→</div>
+    <div class="cm-fstep">
+      <div class="cm-fval" style="color:#c8ff00">${conv.toLocaleString()}</div>
+      <div class="cm-flbl">Closed Deals (${convRate.toFixed(1)}%)</div>
+    </div>
+    <div class="cm-farrow">→</div>
+    <div class="cm-fstep">
+      <div class="cm-fval" style="color:#bf5af2">${fmt(rev)}</div>
+      <div class="cm-flbl">Total Revenue</div>
+    </div>
+  `;
+  
+  document.getElementById('cm-grid').innerHTML = `
+    <div class="cm-stat">
+      <div class="cm-slbl">Marketing Spend</div>
+      <div class="cm-sval" style="color:#bf5af2">${fmt(spend)}</div>
+    </div>
+    <div class="cm-stat">
+      <div class="cm-slbl">Customer Acquisition Cost</div>
+      <div class="cm-sval" style="color:#00f5ff">${cac ? '$'+Math.round(cac) : '—'}</div>
+    </div>
+    <div class="cm-stat">
+      <div class="cm-slbl">Avg Order Value (AOV)</div>
+      <div class="cm-sval" style="color:#ff9f0a">${aov ? '$'+Math.round(aov) : '—'}</div>
+    </div>
+    <div class="cm-stat">
+      <div class="cm-slbl">Net ROI Multiplier</div>
+      <div class="cm-sval" style="color:#c8ff00">${roas ? roas.toFixed(2)+'x' : '—'}</div>
+    </div>
+  `;
+  
+  let recText = '';
+  if (roas >= 10) {
+    recText = `<strong>Top Tier Performer:</strong> ${m.origin} delivers an incredible ${roas.toFixed(1)}x return with low CAC ($${Math.round(cac)}). Strongly recommend increasing budget allocation by 20–50% to capture untapped market demand before reaching diminishing returns.`;
+  } else if (roas >= 4) {
+    recText = `<strong>Healthy Growth Channel:</strong> With a ${roas.toFixed(1)}x ROAS and solid ${convRate.toFixed(1)}% conversion, this channel is profitable and predictable. Maintain consistent spend and A/B test landing pages to further push conversion rate higher.`;
+  } else if (roas >= 2) {
+    recText = `<strong>Moderate Efficiency:</strong> Returns ${roas.toFixed(1)}x ad spend. Focus on retargeting campaigns and optimizing lead nurture sequences to improve lead-to-deal velocity.`;
+  } else if (roas >= 1) {
+    recText = `<strong>Margin Warning:</strong> Channel is hovering near break-even (${roas.toFixed(2)}x ROAS). Review campaign creative and narrow targeting to weed out unqualified leads before cutting budget.`;
+  } else {
+    recText = `<strong>Immediate Action Required:</strong> Negative ROI channel (${roas.toFixed(2)}x ROAS). Spending ${fmt(spend)} while generating only ${fmt(rev)}. Cut budget immediately and reallocate toward top performers like ${results.overview.best_channel || 'paid_search'}.`;
+  }
+  
+  document.getElementById('cm-rec').innerHTML = recText;
+  
+  const modal = document.getElementById('channelModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeChannelModal() {
+  const modal = document.getElementById('channelModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderInsights(overview, metrics) {
+  const valid = metrics.filter(m => m.ROAS != null && m.origin !== 'unknown');
+  const best  = valid.reduce((a,b) => (a.ROAS||0) > (b.ROAS||0) ? a : b, valid[0] || {});
+  const worst = valid.filter(m => (m.assumed_spend||0)>0).reduce((a,b) => (a.ROAS||99) < (b.ROAS||99) ? a : b, valid[0] || {});
+  const wasted = valid.filter(m => (m.ROAS||0) < 1).reduce((s,m) => s + (m.assumed_spend||0), 0);
+
+  document.getElementById('insightRow').innerHTML = `
+    <div class="icard dark">
+      <div class="il">Best Performer</div>
+      <div class="in">${best.origin || '—'}</div>
+      <div class="ib">ROAS ${(best.ROAS||0).toFixed(1)}x · ${fmt(best.assumed_spend||0)} spend generates ${fmt(best.total_revenue||0)} revenue · CAC $${(best.CAC||0).toFixed(0)}</div>
+    </div>
+    <div class="icard neon">
+      <div class="il">Budget Recoverable</div>
+      <div class="in">${fmt(wasted)}</div>
+      <div class="ib">Channels with ROAS below 1x are spending more than they earn. Cut and reinvest into top performers.</div>
+    </div>
+    <div class="icard purple">
+      <div class="il">Worst Performer</div>
+      <div class="in">${worst.origin || '—'}</div>
+      <div class="ib">ROAS ${(worst.ROAS||0).toFixed(2)}x · ${fmt(worst.assumed_spend||0)} spend returns almost nothing · immediate action needed</div>
+    </div>
+  `;
+}
+
+function generateLocalAIResponse(query, overview, metrics) {
+  const q = (query || '').toLowerCase();
+  const valid = (metrics || []).filter(m => m.origin !== 'unknown' && (m.assumed_spend || 0) > 0);
+  const best = valid.reduce((a, b) => ((a.ROAS || 0) > (b.ROAS || 0) ? a : b), valid[0] || {});
+  const worst = valid.reduce((a, b) => ((a.ROAS || 999) < (b.ROAS || 999) ? a : b), valid[0] || {});
+  const bleeds = valid.filter(m => (m.ROAS || 0) < 1.0);
+  const wasted = bleeds.reduce((s, m) => s + (m.assumed_spend || 0), 0);
+  
+  // 1. Best ROI / Best channel
+  if (q.includes('best') || q.includes('top') || q.includes('highest') || q.includes('winner')) {
+    return `🏆 **Best Performing Channel: ${best.origin}**\n\n` +
+      `• **ROAS:** ${(best.ROAS || 0).toFixed(2)}x (generates $${(best.ROAS || 0).toFixed(2)} for every $1 spent)\n` +
+      `• **Revenue:** ${fmt(best.total_revenue || 0)} from ${fmt(best.assumed_spend || 0)} spend\n` +
+      `• **CAC:** $${(best.CAC || 0).toFixed(0)} with a ${(best.conversion_rate || 0).toFixed(1)}% conversion rate\n` +
+      `• **LTV/CAC:** ${(best.LTV_CAC || 0).toFixed(2)}x\n\n` +
+      `💡 **Recommendation:** ${best.origin} is your primary growth engine. Increase budget allocation by 25–40% in your next campaign cycle.`;
+  }
+  
+  // 2. Cut budget / Losing channels / Bleed
+  if (q.includes('cut') || q.includes('los') || q.includes('bleed') || q.includes('waste') || q.includes('stop') || q.includes('trim')) {
+    if (bleeds.length > 0) {
+      const bleedList = bleeds.map(b => `• **${b.origin}**: ${fmt(b.assumed_spend)} spend → ${fmt(b.total_revenue)} revenue (ROAS: ${(b.ROAS||0).toFixed(2)}x)`).join('\n');
+      return `⚠️ **Budget Cut Recommendation (Budget Bleed Detected)**\n\n` +
+        `You are losing a combined **${fmt(wasted)}** on underperforming channels:\n\n${bleedList}\n\n` +
+        `🎯 **Action Plan:**\n1. Immediately pause or slash spend on ${bleeds.map(b => b.origin).join(', ')}.\n2. Redirect ${fmt(wasted)} into **${best.origin}** (${(best.ROAS||0).toFixed(1)}x ROAS).\n3. Projected revenue lift: **+${fmt(Math.round(wasted * ((best.ROAS||3)-1)))}**.`;
+    } else {
+      return `✅ **Channel Health Status: Good**\n\nAll your channels have positive unit economics (ROAS ≥ 1.0x). Your lowest performer is **${worst.origin}** (${(worst.ROAS||0).toFixed(2)}x ROAS). Consider trimming 15% from ${worst.origin} to experiment with new creative.`;
+    }
+  }
+  
+  // 3. Reallocation / Budget Plan
+  if (q.includes('plan') || q.includes('reallocat') || q.includes('budget') || q.includes('distribut')) {
+    const scaleList = valid.filter(m => (m.ROAS || 0) >= 4).map(m => `• **${m.origin}** (${(m.ROAS||0).toFixed(1)}x ROAS) → **Scale +25%**`).join('\n');
+    const holdList = valid.filter(m => (m.ROAS || 0) >= 2 && (m.ROAS || 0) < 4).map(m => `• **${m.origin}** (${(m.ROAS||0).toFixed(1)}x ROAS) → **Maintain Spend**`).join('\n');
+    const cutList = valid.filter(m => (m.ROAS || 0) < 2).map(m => `• **${m.origin}** (${(m.ROAS||0).toFixed(1)}x ROAS) → **Cut -50% to -100%**`).join('\n');
+    
+    return `📊 **Optimized Budget Reallocation Blueprint**\n\n` +
+      `**1. Scale (High ROAS ≥ 4.0x):**\n${scaleList || '• None'}\n\n` +
+      `**2. Maintain / Optimize (ROAS 2.0x - 4.0x):**\n${holdList || '• None'}\n\n` +
+      `**3. Trim / Eliminate (ROAS < 2.0x):**\n${cutList || '• None'}\n\n` +
+      `📈 **Expected Outcome:** Shifting capital toward high-performing channels will elevate your blended portfolio ROAS from ${((overview.total_revenue||0)/(overview.total_spend||1)).toFixed(2)}x to an estimated **${(((overview.total_revenue||0)*1.25)/(overview.total_spend||1)).toFixed(2)}x**.`;
+  }
+  
+  // 4. Comparison (e.g. Paid Search vs Organic Search)
+  if (q.includes('vs') || q.includes('compar') || q.includes('organic') || q.includes('paid')) {
+    const sorted = [...valid].sort((a,b) => (b.ROAS||0) - (a.ROAS||0));
+    const compRows = sorted.slice(0, 4).map(m => `• **${m.origin}**: ROAS ${(m.ROAS||0).toFixed(1)}x | Rev ${fmt(m.total_revenue)} | Spend ${fmt(m.assumed_spend)} | CAC $${(m.CAC||0).toFixed(0)}`).join('\n');
+    return `⚖️ **Channel Performance Breakdown**\n\n${compRows}\n\n💡 Organic channels deliver near-infinite ROAS due to minimal direct ad spend, while Paid channels deliver scale and speed. Ensure your blended CAC stays below 1/3 of your customer LTV (${fmt(overview.avg_ltv || 0)}).`;
+  }
+  
+  // 5. Next quarter / Strategy
+  if (q.includes('quarter') || q.includes('next') || q.includes('focus') || q.includes('strategy')) {
+    return `🎯 **Strategic Roadmap for Next Quarter**\n\n` +
+      `1. **Double Down on ${best.origin}:** Allocate additional resources to exploit existing competitive moat.\n` +
+      `2. **CAC Optimization:** Audit drop-offs in the acquisition funnel where CAC exceeds target benchmarks.\n` +
+      `3. **Simulator Experimentation:** Use the What-If Budget Simulator below to test 10%, 20%, and 50% budget shifts before committing live dollars.\n` +
+      `4. **LTV Expansion:** Current average LTV is ${fmt(overview.avg_ltv)}. Implementing post-purchase retention workflows will directly multiply your channel ROAS without increasing ad costs.`;
+  }
+  
+  // 6. Default Executive Summary
+  return `📈 **Executive Marketing Intelligence Summary**\n\n` +
+    `• **Total Revenue:** ${fmt(overview.total_revenue)} across ${valid.length} tracked channels\n` +
+    `• **Total Spend:** ${fmt(overview.total_spend)} (Blended ROAS: ${((overview.total_revenue||0)/(overview.total_spend||1)).toFixed(2)}x)\n` +
+    `• **Star Channel:** **${best.origin}** (${(best.ROAS||0).toFixed(2)}x ROAS)\n` +
+    `• **Underperformer:** **${worst.origin}** (${(worst.ROAS||0).toFixed(2)}x ROAS)\n\n` +
+    `💬 Ask me specific questions like: *"Where should I cut budget?"*, *"Which channel has the best ROI?"*, or *"Give me a budget plan"*.`;
+}
+
+function setupChat(apiKey, overview, metrics) {
+  const hasKey = !!apiKey;
+  const dot   = document.getElementById('aiDot');
+  const label = document.getElementById('aiLabel');
+  const st    = document.getElementById('chatSt');
+  if (hasKey) {
+    dot.style.background = '#30d158'; label.textContent = 'AI connected'; label.style.color = '#30d158';
+    st.textContent = 'AI analyst · ready'; st.style.color = '#30d158';
+    document.getElementById('welcomeMsg').textContent = `Hi! I've analysed your data — ${metrics.filter(m=>m.origin!=='unknown').length} channels, ${fmt(overview.total_revenue)} total revenue. Ask me anything.`;
+  } else {
+    dot.style.background = '#c8ff00'; label.textContent = 'Smart AI Engine'; label.style.color = '#c8ff00';
+    st.textContent = 'Rule-based smart analyst · active'; st.style.color = '#c8ff00';
+    document.getElementById('welcomeMsg').textContent = `Hi! I'm your offline Smart Marketing Analyst. Ask me anything about your ROI, ROAS, budget cuts, channel performance, or next quarter strategy!`;
+  }
+}
+
+function sw(id, el) {
+  const views = document.querySelectorAll('.view');
+  const tabs = document.querySelectorAll('.ntab');
+  views.forEach(v => { v.style.opacity = '0'; });
+  tabs.forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  setTimeout(() => {
+    views.forEach(v => v.classList.remove('on'));
+    const target = document.getElementById(id);
+    if (target) {
+      target.classList.add('on');
+      requestAnimationFrame(() => {
+        target.style.opacity = '1';
+        target.querySelectorAll('[id^="chart-"]').forEach(c => {
+          try { Plotly.Plots.resize(c); } catch(e){}
+        });
+      });
+    }
+  }, 150);
+}
+
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.view.on [id^="chart-"]').forEach(c => {
+    try { Plotly.Plots.resize(c); } catch(e){}
+  });
+});
+
+function addMsg(t, cls) {
+  const m = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls; d.textContent = t;
+  m.appendChild(d); m.scrollTop = m.scrollHeight; return d;
+}
+function addTyping() {
+  const m = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = '<div class="tdots"><div class="d"></div><div class="d"></div><div class="d"></div></div>';
+  m.appendChild(d); m.scrollTop = m.scrollHeight; return d;
+}
+function clearChat() {
+  hist = [];
+  document.getElementById('msgs').innerHTML = '<div class="msg ai">Chat cleared. Ask me anything about your data.</div>';
+}
+function ask(q) {
+  sw('ai', document.querySelectorAll('.ntab')[2]);
+  document.getElementById('inp').value = q; send();
+}
+
+async function send() {
+  const inp = document.getElementById('inp'), btn = document.getElementById('sendbtn');
+  const q = inp.value.trim(); if (!q) return;
+  inp.value = ''; btn.disabled = true;
+  addMsg(q, 'user'); hist.push({ role: 'user', content: q });
+
+  const { results, api_key, backend } = STATE;
+  const t = addTyping();
+
+  if (!api_key) {
+    setTimeout(() => {
+      t.remove();
+      const reply = generateLocalAIResponse(q, results?.overview || {}, results?.metrics || []);
+      addMsg(reply, 'ai');
+      hist.push({ role: 'assistant', content: reply });
+      btn.disabled = false;
+    }, 400);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${backend}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key, messages: hist, context: { overview: results.overview, metrics: results.metrics } })
+    });
+    const data = await res.json();
+    t.remove();
+    if (data.error) {
+      const fallbackReply = generateLocalAIResponse(q, results?.overview || {}, results?.metrics || []);
+      addMsg(`(Cloud AI error: ${data.error})\n\n${fallbackReply}`, 'ai');
+      hist.push({ role: 'assistant', content: fallbackReply });
+    } else {
+      addMsg(data.reply, 'ai');
+      hist.push({ role: 'assistant', content: data.reply });
+    }
+  } catch (e) {
+    t.remove();
+    const fallbackReply = generateLocalAIResponse(q, results?.overview || {}, results?.metrics || []);
+    addMsg(fallbackReply, 'ai');
+    hist.push({ role: 'assistant', content: fallbackReply });
+  }
+  btn.disabled = false;
+}
+
+// Onboarding Walkthrough
+const onboardSteps = [
+  {step:'STEP 1 OF 3',title:'📊 Your Dashboard',desc:'All your key metrics — revenue, ROAS, CAC, and LTV — are displayed in the Overview tab at a glance.'},
+  {step:'STEP 2 OF 3',title:'📈 Deep Dive Channels',desc:'Switch to the Channels tab to see detailed breakdowns, budget recommendations, and the efficiency scatter plot.'},
+  {step:'STEP 3 OF 3',title:'🤖 AI Analyst',desc:'Ask the AI anything about your data. It knows all your metrics and can suggest budget optimisations.'}
+];
+let obIdx = 0;
+
+function showOnboard() {
+  if (localStorage.getItem('ml-onboard-done')) { closeOnboard(); return; }
+  const o = document.getElementById('onboard');
+  if (o) {
+    o.classList.remove('hidden');
+    renderOnboardStep();
+  }
+}
+function renderOnboardStep() {
+  const s = onboardSteps[obIdx];
+  document.getElementById('ob-step').textContent = s.step;
+  document.getElementById('ob-title').textContent = s.title;
+  document.getElementById('ob-desc').textContent = s.desc;
+  document.querySelectorAll('.ob-dot').forEach((d,i) => d.classList.toggle('on', i===obIdx));
+  document.getElementById('ob-next').textContent = obIdx < onboardSteps.length-1 ? 'Next →' : 'Get Started';
+}
+function nextOnboard() {
+  if (obIdx < onboardSteps.length - 1) { obIdx++; renderOnboardStep(); }
+  else closeOnboard();
+}
+function closeOnboard() {
+  const o = document.getElementById('onboard');
+  if (o) o.classList.add('hidden');
+  localStorage.setItem('ml-onboard-done', '1');
+}
+
+// Global Keyboard Navigation
+window.addEventListener('keydown', (e) => {
+  const tag = (document.activeElement?.tagName || '').toLowerCase();
+  const isInput = tag === 'input' || tag === 'textarea';
+
+  if (e.key === 'Escape') {
+    closeChannelModal();
+    closeOnboard();
+    if (isInput) document.activeElement.blur();
+    return;
+  }
+
+  if (isInput) return;
+
+  if (e.key === '1') {
+    const tabs = document.querySelectorAll('.ntab');
+    if (tabs[0]) sw('ov', tabs[0]);
+  } else if (e.key === '2') {
+    const tabs = document.querySelectorAll('.ntab');
+    if (tabs[1]) sw('ch', tabs[1]);
+  } else if (e.key === '3') {
+    const tabs = document.querySelectorAll('.ntab');
+    if (tabs[2]) sw('ai', tabs[2]);
+  } else if (e.key === '/') {
+    e.preventDefault();
+    const search = document.getElementById('tblSearch');
+    if (search) {
+      const tabs = document.querySelectorAll('.ntab');
+      if (tabs[1]) sw('ch', tabs[1]);
+      setTimeout(() => search.focus(), 150);
+    }
+  }
+});
+</script>
+</body>
+</html>

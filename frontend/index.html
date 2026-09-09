@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MarketLens — Marketing Intelligence</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23c8ff00'/><circle cx='16' cy='16' r='10' stroke='%230a0a0a' stroke-width='2' fill='none'/><circle cx='16' cy='16' r='5' stroke='%230a0a0a' stroke-width='2' fill='none'/><circle cx='16' cy='16' r='2' fill='%230a0a0a'/></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#09090f;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.wrap{width:100%;max-width:580px;position:relative}
+
+/* Ambient glow */
+.wrap::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:320px;height:320px;background:radial-gradient(circle,rgba(200,255,0,0.08) 0%,rgba(0,245,255,0.04) 45%,transparent 70%);pointer-events:none;z-index:-1;filter:blur(30px)}
+
+.logo{display:flex;align-items:center;gap:11px;margin-bottom:36px}
+.lm{width:38px;height:38px;border-radius:10px;background:#c8ff00;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 16px rgba(200,255,0,0.3)}
+.ln{font-size:18px;font-weight:900;color:#fff;letter-spacing:2px}
+.ls{font-size:11px;color:#555;letter-spacing:1.5px;margin-top:2px}
+
+.headline{font-size:38px;font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1.15;margin-bottom:12px}
+.headline em{color:#c8ff00;font-style:normal;text-shadow:0 0 20px rgba(200,255,0,0.3)}
+.sub{font-size:13px;color:#888;line-height:1.7;margin-bottom:24px}
+
+.feature-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.f-pill{font-size:11px;font-weight:700;color:#aaa;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:5px 12px;letter-spacing:.5px}
+
+.section-label{font-size:11px;color:#888;letter-spacing:1px;font-weight:700;margin-bottom:10px;text-transform:uppercase}
+
+.api-row{display:flex;gap:8px;margin-bottom:24px}
+.api-input{flex:1;background:#11111d;border:1px solid #1a1a2e;border-radius:6px;padding:12px 16px;font-size:13px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:all .2s}
+.api-input:focus{border-color:#c8ff00;box-shadow:0 0 12px rgba(200,255,0,0.15)}
+.api-input::placeholder{color:#444}
+.api-hint{font-size:11px;color:#555;margin-top:6px;line-height:1.5}
+.api-hint a{color:#777;text-decoration:underline}
+
+.drop-zone{border:1px dashed #2a2a3e;background:rgba(17,17,29,0.6);backdrop-filter:blur(8px);border-radius:8px;padding:34px 20px;text-align:center;cursor:pointer;transition:all .25s cubic-bezier(0.16,1,0.3,1);margin-bottom:14px;position:relative}
+.drop-zone:hover{border-color:#c8ff00;background:rgba(200,255,0,0.03);transform:translateY(-1px)}
+.drop-zone.drag{border-color:#c8ff00;background:rgba(200,255,0,0.08);box-shadow:0 0 30px rgba(200,255,0,0.25);transform:scale(1.01)}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:32px;margin-bottom:8px}
+.dz-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.dz-sub{font-size:12px;color:#666}
+
+.file-list{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;min-height:0}
+.fitem{display:flex;align-items:center;gap:10px;padding:11px 14px;background:#11111e;border-radius:6px;border:1px solid #1a1a2e;transition:.2s}
+.fitem:hover{border-color:#2a2a44}
+.fitem-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fitem-name{font-size:12px;color:#ccc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.fitem-status{font-size:11px;font-weight:800;letter-spacing:.5px;flex-shrink:0}
+.fitem-remove{font-size:16px;color:#444;cursor:pointer;flex-shrink:0;line-height:1;transition:.15s}
+.fitem-remove:hover{color:#ff4444}
+
+.required-files{background:#11111e;border:1px solid #1a1a2e;border-radius:6px;padding:16px;margin-bottom:16px}
+.rf-title{font-size:11px;color:#777;letter-spacing:1px;font-weight:800;margin-bottom:12px;text-transform:uppercase}
+.rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rf-item{font-size:12px;color:#555;display:flex;align-items:center;gap:6px;transition:.2s}
+.rf-item.ok{color:#666}
+.rf-item.ready{color:#c8ff00;font-weight:600}
+.rf-dot{width:6px;height:6px;border-radius:50%;background:#222;flex-shrink:0}
+.rf-item.ok .rf-dot{background:#444}
+.rf-item.ready .rf-dot{background:#c8ff00;box-shadow:0 0 6px #c8ff00}
+
+.csv-guide{margin-bottom:24px}
+.csv-guide summary{font-size:12px;color:#777;cursor:pointer;letter-spacing:.5px;font-weight:700;padding:10px 0;list-style:none;display:flex;align-items:center;gap:8px;transition:.2s}
+.csv-guide summary::before{content:'▸';font-size:12px;transition:transform .2s}
+.csv-guide[open] summary::before{transform:rotate(90deg)}
+.csv-guide summary:hover{color:#c8ff00}
+.guide-content{background:#11111e;border:1px solid #1a1a2e;border-radius:6px;padding:14px 16px;margin-top:6px}
+.guide-item{font-size:12px;color:#777;padding:6px 0;border-bottom:1px solid #1a1a2e;line-height:1.6}
+.guide-item:last-child{border-bottom:none}
+.guide-item strong{color:#aaa;font-weight:700}
+
+.demo-box{background:rgba(17,17,34,0.7);backdrop-filter:blur(8px);border:1px solid #00f5ff40;border-radius:8px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all .2s}
+.demo-box:hover{border-color:#00f5ff80;box-shadow:0 0 20px rgba(0,245,255,0.1)}
+.demo-text{font-size:12px;color:#999;line-height:1.5}
+.demo-text strong{color:#00f5ff;display:block;margin-bottom:3px;font-size:13px;letter-spacing:.3px}
+.demo-btn{background:#00f5ff;color:#09090f;border:none;border-radius:4px;padding:11px 18px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:'Inter',sans-serif}
+.demo-btn:hover{background:#33f8ff;box-shadow:0 0 16px rgba(0,245,255,0.4);transform:translateY(-1px)}
+
+.analyse-btn{width:100%;background:#c8ff00;color:#0a0a0a;border:none;border-radius:6px;padding:16px;font-size:13px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.analyse-btn:hover:not(:disabled){background:#d4ff1a;box-shadow:0 0 20px rgba(200,255,0,0.3);transform:translateY(-1px)}
+.analyse-btn:disabled{background:#161622;color:#444;cursor:not-allowed}
+
+.error{font-size:12px;color:#ff4444;margin-top:12px;padding:12px 16px;background:#1a0505;border:1px solid #330000;border-radius:6px;display:none}
+.progress{font-size:12px;color:#c8ff00;margin-top:12px;text-align:center;display:none;letter-spacing:.5px;font-weight:600}
+
+footer{margin-top:40px;font-size:11px;color:#444;letter-spacing:1px;text-align:center}
+
+@media(max-width:600px){
+  body{padding:20px 12px}
+  .headline{font-size:28px}
+  .rf-grid{grid-template-columns:1fr}
+  .demo-box{flex-direction:column;align-items:stretch;text-align:center}
+  .demo-btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="logo">
+    <div class="lm">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="6.5" stroke="#0a0a0a" stroke-width="1"/>
+        <circle cx="9" cy="9" r="3.5" stroke="#0a0a0a" stroke-width="1.2"/>
+        <circle cx="9" cy="9" r="1.5" fill="#0a0a0a"/>
+        <line x1="10.8" y1="7.2" x2="14.5" y2="3.5" stroke="#3a6e00" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="15" cy="3" r="1.3" fill="#3a6e00"/>
+      </svg>
+    </div>
+    <div><div class="ln">MARKETLENS</div><div class="ls">Marketing Intelligence</div></div>
+  </div>
+
+  <div class="headline">Upload your<br><em>marketing</em> data</div>
+  <div class="sub">Upload your CSV files and MarketLens will automatically calculate CAC, ROAS, LTV/CAC, cohort analysis and generate an interactive AI-powered dashboard. Supports any e‑commerce CSV format.</div>
+
+  <div class="feature-strip">
+    <span class="f-pill">⚡ 1-Sec Relational Ingestion</span>
+    <span class="f-pill">📊 Non-Linear Saturation Simulator</span>
+    <span class="f-pill">🤖 Ground-Truth AI Analyst</span>
+  </div>
+
+  <div class="demo-box">
+    <div class="demo-text">
+      <strong>✨ Want an instant test drive?</strong>
+      <span>Explore the full dashboard immediately using a pre-loaded sample dataset.</span>
+    </div>
+    <button class="demo-btn" id="demoBtn" onclick="runDemo()">⚡ LOAD SAMPLE DATA</button>
+  </div>
+
+  <div class="section-label">AI API Key (for AI insights)</div>
+  <div class="api-row">
+    <input class="api-input" id="apiKey" type="password" placeholder="Enter your API key (optional)"/>
+  </div>
+  <div class="api-hint">Optional — charts and analysis work without it.</div>
+
+  <br/><br/>
+
+  <div class="section-label">Upload CSV Files</div>
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" multiple accept=".csv" onchange="handleFiles(this.files)"/>
+    <div class="dz-icon">📂</div>
+    <div class="dz-title">Drop your CSV files here</div>
+    <div class="dz-sub">or click to browse — select all 6 required files at once</div>
+  </div>
+
+  <div class="file-list" id="fileList"></div>
+
+  <div class="required-files">
+    <div class="rf-title">Required Files</div>
+    <div class="rf-grid" id="rfGrid">
+      <div class="rf-item" id="rf-orders"><div class="rf-dot"></div>orders.csv</div>
+      <div class="rf-item" id="rf-items"><div class="rf-dot"></div>items.csv</div>
+      <div class="rf-item" id="rf-payments"><div class="rf-dot"></div>payments.csv</div>
+      <div class="rf-item" id="rf-customers"><div class="rf-dot"></div>customers.csv</div>
+      <div class="rf-item" id="rf-mql"><div class="rf-dot"></div>mql.csv</div>
+      <div class="rf-item" id="rf-deals"><div class="rf-dot"></div>deals.csv</div>
+    </div>
+  </div>
+
+  <details class="csv-guide">
+    <summary>What columns do my CSV files need?</summary>
+    <div class="guide-content">
+      <div class="guide-item"><strong>orders.csv</strong> — order_id, customer_id, order_status, order_purchase_timestamp</div>
+      <div class="guide-item"><strong>items.csv</strong> — order_id, seller_id, price</div>
+      <div class="guide-item"><strong>payments.csv</strong> — order_id, payment_value</div>
+      <div class="guide-item"><strong>customers.csv</strong> — customer_id, customer_unique_id</div>
+      <div class="guide-item"><strong>mql.csv</strong> — mql_id, origin</div>
+      <div class="guide-item"><strong>deals.csv</strong> — mql_id, seller_id</div>
+    </div>
+  </details>
+
+  <button class="analyse-btn" id="analyseBtn" disabled onclick="analyse()">UPLOAD & ANALYSE →</button>
+  <div class="error" id="errorBox"></div>
+  <div class="progress" id="progressBox"></div>
+</div>
+
+<footer>MarketLens · Marketing Intelligence Platform</footer>
+
+<script>
+const BACKEND = 'http://localhost:5000';
+
+// Keywords to detect which role a CSV file belongs to (order matters — first match wins)
+const KEY_PATTERNS = [
+  { key: 'mql',       patterns: ['marketing_qualified', 'mql'] },
+  { key: 'deals',     patterns: ['closed_deals', 'deals'] },
+  { key: 'items',     patterns: ['order_items', 'items'] },
+  { key: 'payments',  patterns: ['order_payments', 'payments'] },
+  { key: 'orders',    patterns: ['orders'] },
+  { key: 'customers', patterns: ['customers'] },
+  { key: 'products',  patterns: ['products'] },
+  { key: 'sellers',   patterns: ['sellers'] },
+  { key: 'reviews',   patterns: ['reviews'] },
+];
+
+const REQUIRED = ['orders','items','payments','customers','mql','deals'];
+const RF_MAP = {
+  'orders':   'rf-orders',
+  'items':    'rf-items',
+  'payments': 'rf-payments',
+  'customers':'rf-customers',
+  'mql':      'rf-mql',
+  'deals':    'rf-deals',
+};
+
+// uploadedFiles: { detectedKey: { file, originalName } }
+let uploadedFiles = {};
+
+function detectKey(filename) {
+  const lower = filename.toLowerCase();
+  for (const entry of KEY_PATTERNS) {
+    for (const p of entry.patterns) {
+      if (lower.includes(p)) return entry.key;
+    }
+  }
+  return null;
+}
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    if (!f.name.toLowerCase().endsWith('.csv')) return;
+    const key = detectKey(f.name);
+    if (key) {
+      uploadedFiles[key] = { file: f, originalName: f.name };
+    }
+  });
+  renderFileList();
+  updateRequired();
+  checkReady();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+  Object.entries(uploadedFiles).forEach(([key, {file, originalName}]) => {
+    const isRequired = REQUIRED.includes(key);
+    const div = document.createElement('div');
+    div.className = 'fitem';
+    div.innerHTML = `
+      <div class="fitem-dot" style="background:${isRequired?'#c8ff00':'#444'}"></div>
+      <span class="fitem-name">${originalName} → ${key}</span>
+      <span class="fitem-status" style="color:${isRequired?'#c8ff00':'#444'}">${isRequired?'REQUIRED':'OPTIONAL'}</span>
+      <span class="fitem-remove" onclick="removeFile('${key}')">×</span>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function removeFile(key) {
+  delete uploadedFiles[key];
+  renderFileList();
+  updateRequired();
+  checkReady();
+}
+
+function updateRequired() {
+  REQUIRED.forEach(r => {
+    const el = document.getElementById(RF_MAP[r]);
+    if (!el) return;
+    el.className = uploadedFiles[r] ? 'rf-item ready' : 'rf-item ok';
+  });
+}
+
+function checkReady() {
+  const allReady = REQUIRED.every(r => !!uploadedFiles[r]);
+  document.getElementById('analyseBtn').disabled = !allReady;
+}
+
+async function analyse() {
+  const btn = document.getElementById('analyseBtn');
+  const err = document.getElementById('errorBox');
+  const prog = document.getElementById('progressBox');
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  prog.style.display = 'block';
+  prog.textContent = 'Uploading files...';
+
+  const formData = new FormData();
+  Object.entries(uploadedFiles).forEach(([key, {file, originalName}]) => {
+    // Send with the generic key name as the filename so the backend can map it
+    formData.append(key + '.csv', file, key + '.csv');
+  });
+
+  try {
+    prog.textContent = 'Running analysis — this takes 20-40 seconds...';
+    const res = await fetch(`${BACKEND}/analyse`, { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Analysis failed');
+    }
+
+    prog.textContent = 'Analysis complete! Loading dashboard...';
+
+    const payload = {
+      results:  data,
+      api_key:  document.getElementById('apiKey').value.trim(),
+      backend:  BACKEND,
+    };
+    sessionStorage.setItem('marketlens', JSON.stringify(payload));
+    window.location.href = '/dashboard';
+
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = 'Error: ' + e.message;
+    prog.style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
+async function runDemo() {
+  const btn = document.getElementById('demoBtn');
+  const prog = document.getElementById('progressBox');
+  const err = document.getElementById('errorBox');
+  err.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'LOADING...';
+  prog.style.display = 'block';
+  prog.textContent = 'Loading sample e-commerce dataset...';
+  try {
+    const res = await fetch(`${BACKEND}/demo`);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Failed to load demo');
+    prog.textContent = 'Ready! Launching dashboard...';
+    const payload = {
+      results: data,
+      api_key: document.getElementById('apiKey').value.trim(),
+      backend: BACKEND,
+    };
+    sessionStorage.setItem('marketlens', JSON.stringify(payload));
+    window.location.href = '/dashboard';
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = 'Error: ' + e.message;
+    prog.style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = '⚡ LOAD SAMPLE DATA';
+  }
+}
+</script>
+</body>
+</html>
