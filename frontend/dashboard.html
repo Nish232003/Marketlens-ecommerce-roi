@@ -1174,7 +1174,8 @@ async function send() {
   }
 
   try {
-    const res = await fetch(`${backend}/chat`, {
+    const backendUrl = backend || window.location.origin;
+    const res = await fetch(`${backendUrl}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ api_key, messages: hist, context: { overview: results.overview, metrics: results.metrics } })
