@@ -2,7 +2,7 @@
 
 ### E-Commerce Marketing ROI Intelligence Platform
 
-MarketLens is an end-to-end marketing analytics platform that ingests raw e-commerce transactional CSVs, computes channel-level ROI metrics (ROAS, CAC, LTV/CAC), generates interactive visualizations, and provides AI-powered strategic recommendations — all from a single browser tab.
+MarketLens is an end-to-end marketing analytics platform that ingests raw e-commerce transactional CSVs, computes channel-level ROI metrics (ROAS, CAC, LTV/CAC), generates interactive visualizations, and provides AI-powered strategic recommendations  all from a single browser tab.
 
 <p align="left">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python" alt="Python"></a>
@@ -36,6 +36,13 @@ Rather than requiring manual spreadsheet analysis, MarketLens **automates the fu
 ### Dashboard
 
 MarketLens provides a glassmorphism-styled dark dashboard with interactive charts, smart filter chips, channel drill-down modals, and a built-in AI analyst for conversational strategy queries.
+<img width="954" height="437" alt="image" src="https://github.com/user-attachments/assets/04265e6d-4420-4167-9a5e-e3d4ff7a59d7" />
+<img width="957" height="439" alt="image" src="https://github.com/user-attachments/assets/f57f9a22-cda2-403c-852c-a8990c16ab5e" />
+<img width="959" height="440" alt="image" src="https://github.com/user-attachments/assets/b2f87282-e843-4fdc-bf7a-e137a9ae4ef8" />
+<img width="957" height="442" alt="image" src="https://github.com/user-attachments/assets/5daa2019-0623-4add-928a-516b3a9173ec" />
+<img width="953" height="445" alt="image" src="https://github.com/user-attachments/assets/ec3ae404-dcc7-45e3-a2fe-0fc1ae7e3c65" />
+<img width="956" height="440" alt="image" src="https://github.com/user-attachments/assets/fcb0d018-62d7-4d12-a99d-64812aa56342" />
+<img width="956" height="439" alt="image" src="https://github.com/user-attachments/assets/fd2f1a35-b74c-400d-9c6c-567e735c4933" />
 
 <br>
 
@@ -47,12 +54,12 @@ MarketLens provides a glassmorphism-styled dark dashboard with interactive chart
 
 E-commerce marketing teams work with fragmented transactional data spread across multiple files:
 
-- **Orders** — purchase timestamps, statuses
-- **Items** — product prices, seller mappings
-- **Payments** — transaction amounts
-- **Customers** — unique customer IDs
-- **MQLs** — marketing qualified leads and their origins
-- **Deals** — conversion from lead to seller
+- **Orders** : purchase timestamps, statuses
+- **Items** : product prices, seller mappings
+- **Payments** : transaction amounts
+- **Customers** : unique customer IDs
+- **MQLs** : marketing qualified leads and their origins
+- **Deals** : conversion from lead to seller
 
 Translating this raw data into channel-level ROI metrics requires:
 
@@ -64,7 +71,7 @@ Translating this raw data into channel-level ROI metrics requires:
 
 This workflow is manual, error-prone, and time-consuming in spreadsheets.
 
-MarketLens automates the entire pipeline — **from CSV upload to strategic AI recommendations** — in under 2 seconds.
+MarketLens automates the entire pipeline  **from CSV upload to strategic AI recommendations**  in under 2 seconds.
 
 ---
 
